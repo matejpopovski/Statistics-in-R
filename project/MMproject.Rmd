@@ -1,0 +1,156 @@
+---
+title: "MarchMadnessProject"
+output: html_document
+date: "2024-04-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE, error = TRUE, fig.height = 3)
+library(tidyverse)
+library(kableExtra)
+source("../scripts/viridis.R")
+source("../scripts/ggprob.R")
+```
+
+## R Markdown
+
+> INTRODUCTION & BACKGROUND
+>
+> The game of basketball has changed over the years; in fact, the three-point line was not introduced to the NBA until 1961. Since then, players like Steph Curry have transformed the NBA once they played outside the three-point line and extended the court. Over the years, in the NBA, since the introduction and the subsequent revolution of the mid-2010s, the number of attempted 3-point shots (shots taken) and 3-point efficiency (average percentage of threes made) has steadily increased (Tomasz, 2023). Therefore, our project aims to answer whether NBA trends have descended into college basketball play by analyzing the March Madness team's 3-point attempts and makes between 2010 and 2023. To do so, we graphed the sum of attempts for all tournament teams by year in a graph and the sum of 3-point percentages for all tournament teams by year; additionally, we conducted a hypothesis test using the difference of means on both attempts and percentages made. Splitting the data from 2010 to 2015, 2015 was the first year the Warriors won a championship, and the 3-point trend started to take hold compared to the recent year (2016-2024). Based on our findings, although college basketball has been less consistent in 3-points taken and 3-points made, the difference in means test suggests that college teams are taking more 3-point shots; however, they are not making more. Therefore, NBA trends may be trickling down into college play to a degree, but based on the variables chosen, further data analysis would need to be conducted to conclude whether or not NBA trends have significantly influenced the three-point shot overall.
+>
+> The [March Madness Data collection ](https://www.kaggle.com/datasets/nishaanamin/march-madness-data?select=Shooting+Splits.csv)on Kaggle is a series of CSV files compiled by Nishaan Amin to create a comprehensive data set about all the relevant statistics and information related to March Madness. Nishaan Amin compiled this data set from various sources, including [ABC News](https://abcnews.go.com/538), [ESPN](https://www.espn.com/),[kenpom](https://kenpom.com/), [barttorvik](https://www.barttorvik.com/#),[heatcheckcbb](https://heatcheckcbb.com/), and [collagepollarchive](https://www.collegepollarchive.com/). We chose the "shooting+splits" CSV file. This specific subset has all relevant data, including tournament teams and shooting data between 2010 and 2024.
+>
+> > IMPORTANT VARIABLES:
+> >
+> > TEAM - Division I college basketball team name
+> >
+> > YEAR - Ending year of the team's season
+> >
+> > THREES_SPLIT - The percent of shots taken that are 3-points 
+> >
+> > MADE_THREES% - The percent of 3-points made
+>
+> \*Note that data for 2020 was missing due to COVID-19. Therefore, we excluded the year 2020 from our project. 
+
+```{r dataload, include=FALSE}
+shoot = read_csv("../data/Shooting Splits.csv")
+mmdata = shoot %>%
+        #filter(YEAR %in% (2016:2023)) %>%
+        filter(YEAR != 2020) %>%
+        rename(THREES_SPLIT = "THREES SHARE", MADE_THREES = "THREES FG%")
+          
+mmdata
+```
+
+```{r, include=FALSE}
+mmdata = mmdata %>%
+       group_by(YEAR) %>%
+       mutate(YEARLY_THREES_SHARE = sum(THREES_SPLIT)/n(), YEARLY_THREES_MADE = sum(MADE_THREES)/n())
+```
+
+```{r graphing, echo=FALSE}
+ggplot(mmdata, aes(x = YEAR, y = YEARLY_THREES_SHARE)) + 
+  geom_point() +
+  geom_smooth()
+ 
+```
+
+> This graph displays the sum of three points taken by all tournament teams during March Madness. As you can see, there was a dramatic increase in attempted three-pointers between 2015 and 2019. However, since 2020, three-point attempts have started to decrease but are still significantly higher than in the years preceding 2015.
+
+```{r, echo=FALSE}
+ggplot(mmdata, aes(x = YEAR, y = YEARLY_THREES_MADE)) + 
+  geom_point() +
+  geom_smooth()
+```
+
+> Unlike the NBA, where both shot attempts and percentage made have increased, tournament teams' percentages during March Madness have largely decreased since 2015.
+
+> HYPOTHESIS TEST
+>
+> Inference question: Is there a difference between the true underlying average 3-point shot attempts between the years 2010-2015 and 2016-2020.
+>
+> Model Statement:
+>
+> Let Xi, for i=1,...n1 be the observed 3-point shot attempts between the years 2010-2015
+>
+> Let Yi, for i=1,...n2 be the observed 3-point shot attempts between the years 2016-2024 t
+>
+> Let μx and σx be the true average and standard deviation of the true distribution Dx of the 2010-2015 group.
+>
+> Let μy and σy be the true average and standard deviation of the true distribution Dy of the 2016-2020 group.
+>
+> Xi∼Dx(μx,σx)
+>
+> Yi∼Dy(μy,σy)\
+> .
+
+> Step 2:
+>
+> Null Hypothesis H0:μx=μy : There is no change in the 3-point shot attempts since between the years 2010-2015 and 2016-2020.
+>
+> Alternative Hypothesis Ha:μx \< μy: March Madness teams have attempted more 3-pointers during March Madness during 2016-2020 compared to 2010-2015
+
+```{r, echo=FALSE}
+ThreesShare2010To2015 = mmdata %>%
+                   filter(YEAR %in% (2010:2015)) %>%
+                   pull(YEARLY_THREES_SHARE)
+ThreesShare2016ToNow = mmdata %>%
+                   filter(YEAR %in% (2016:2024)) %>%
+                   pull(YEARLY_THREES_SHARE)
+
+t.test(ThreesShare2010To2015, ThreesShare2016ToNow, alternative = "two.sided")
+```
+
+> Given our two-sample t-test. Since the p-value less than .05 we reject the null hypothesis and conclude that there is very strong evidence to for an true average increase in 3-point shot attempts by March Madness tournament teams in recent years (2016-2024) compared to March Madness teams during the years 2010-2015. 
+
+> HYPOTHESIS TEST
+>
+> Inference question: Is there a difference between the true underlying average made 3-point shots between the years 2010-2015 and 2016-2020.
+>
+> > Model Statement:
+> >
+> > Let Xi, for i=1,...n1 be the observed made 3-point shots between the years 2010-2015
+> >
+> > Let Yi, for i=1,...n2 be the observed made 3-point shots between the years 2016-2024 t
+> >
+> > Let μx and σx be the true average and standard deviation of the true distribution Dx of the 2010-2015 group.
+> >
+> > Let μy and σy be the true average and standard deviation of the true distribution Dy of the 2016-2020 group.Xi∼Dx(μx,σx)
+> >
+> > Yi∼Dy(μy,σy)
+
+> > Step 2:
+> >
+> > Null Hypothesis H0:μx=μy : There is no change in made 3-point shots between the years 2010-2015 and 2016-2020.
+> >
+> > Alternative Hypothesis Ha:μx \< μy: March Madness teams have made more 3-pointers during March Madness during 2016-2020 compared to 2010-2015
+
+```{r, echo=FALSE}
+ThreesMade2010To2015 = mmdata %>%
+                   filter(YEAR %in% (2010:2015)) %>%
+                   pull(YEARLY_THREES_MADE)
+ThreesMade2016ToNow = mmdata %>%
+                   filter(YEAR %in% (2016:2024)) %>%
+                   pull(YEARLY_THREES_MADE)
+
+t.test(ThreesMade2010To2015, ThreesMade2016ToNow, alternative = "two.sided")
+```
+
+> Given our two-sample t-test, the p-value is .7034; we do not reject the null hypothesis and conclude that there is no strong evidence to suggest an increase in 3 points made by tournament teams post-2015
+
+> DISCUSSION
+>
+> Based on our two graphs and two-variable difference of means t-tests, evidence suggests that 3-point shot attempts have increased, and the 3-point percentage has decreased over time. However, we lack evidence to conclude that NBA trends transcend into college basketball. One possible explanation for this is that college players are not as skilled as NBA players, and therefore, although players are taking more shots, they are not as successful, explaining the decrease in the percentage. Other possible explanations are that our data is skewed because the research on NBA trends included averages across an entire season, whereas ours only comprised March Madness; therefore, other conclusions are possible if we included data for all teams across the entire college season. However, there would still be disparity as the league comprises 30 teams, whereas Division One basketball comprises 358 teams,, possibly exasperating the skill distribution.
+>
+> Therefore, a more in-depth statistical analysis could isolate and compare the stats of the NBA draft picks. Isolating the highest-caliber players could better indicate NBA to college trends, as college basketball players have a broader variation of skill and ability compared to pros. Another way to approach it would be to isolate more skilled teams year by year or take entire season averages on the D1 level instead of only tournament play. In sum, there could be many directions to take in determining how professional play influences; however, due to an evidently larger pool (college vs. pro) and overall, there are many limitations to determining correlating trends. However, our project is a starting point for further analysis as it provides some suggesting evidence of a potential correlation between NBA and college play.
+
+> REFRENCES
+>
+> Zając, Tomasz et al. "Long-Term Trends in Shooting Performance in the NBA: An Analysis of Two- and Three-Point Shooting across 40 Consecutive Seasons." International journal of environmental research and public health vol. 20,3 1924. 20 Jan. 2023, <doi:10.3390/ijerph20031924>
+>
+> Amin, Nishaan. "shooting+splits." March Madness Data, 2024, <https://www.kaggle.com/datasets/nishaanamin/march-madness-data?select=Shooting+Splits.csv.> Accessed 17 April 2024.
+>
+> > barttorvik. "2024 Customizable T-Rank and Tempo-Free Stats." T-Rank - Customizable College Basketball Tempo Free Stats - T-Rank, 2024, <https://www.barttorvik.com/#.> Accessed 17 April 2024.
+> >
+> > \*Other sources listed under citations were not to specific pages

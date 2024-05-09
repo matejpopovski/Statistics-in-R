@@ -1,0 +1,88 @@
+---
+author: "Matej Popovski"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message=FALSE, warning = FALSE,
+                      fig.height = 3,
+                      error = TRUE)
+library(tidyverse)
+# source("../../scripts/viridis.R")
+```
+
+## Project
+
+
+```{r read-planet-data}
+## Read in the csv file
+shooting_data = read_csv("./data/ShootingSplits.csv") 
+ranking_data = read_csv("./data/Ratings.csv")
+# shooting_data 
+# ranking_data
+
+shooting_data = shooting_data %>%
+  filter(YEAR != 2024)
+
+joinned_data = full_join(shooting_data, ranking_data, join_by("TEAM NO"))
+joinned_data = joinned_data %>%
+  rename(THREES_SHARE = "THREES SHARE") %>%
+  group_by(YEAR.x) %>%
+  mutate(sum_pct_year = sum(THREES_SHARE))
+
+joinned_data
+
+ggplot(data = joinned_data, aes(x=YEAR.x, y=sum_pct_year)) +
+  geom_point() + geom_smooth()
+
+
+# Assuming your data frame is named 'df', and the relevant columns are 'SEED' and 'THREES FG%'
+# Create a boxplot
+ggplot(joinned_data, aes(x = factor(SEED), y = `THREES FG%`)) +
+  geom_boxplot() +  # Boxplot
+  labs(x = "Seed Rank", y = "3-Point Shooting Percentage", title = "Distribution of 3-Point Shooting Percentage Across Seed Ranks") +
+  theme_minimal()
+
+
+# Assuming your data frame is named 'df', and the relevant columns are 'SEED' and 'DUNKS SHARE'
+# Create a scatter plot
+ggplot(joinned_data, aes(x = SEED, y = `DUNKS SHARE`)) +
+  geom_point() + geom_smooth() +  # Scatter plot
+  labs(x = "Seed Rank", y = "Share of Dunks", title = "Relationship Between Seed Rank and Share of Dunks") +
+  theme_minimal()
+
+
+
+```
+
+```{r}
+
+# Load necessary libraries
+library(plotly)
+
+# Assuming your data frame is named 'joinned_data'
+# Create an interactive scatter plot
+plot_ly(joinned_data, x = ~SEED, y = ~`THREES FG%`, color = ~CONF, 
+        text = ~paste("Team: ", TEAM.x, "<br>Conference: ", CONF, "<br>3-Point Shooting Percentage: ", `THREES FG%`, "%"),
+        hoverinfo = "text") %>%
+  add_markers() %>%
+  layout(title = "Relationship Between Seed Rank, Conference, and 3-Point Shooting Percentage",
+         xaxis = list(title = "Seed Rank"),
+         yaxis = list(title = "3-Point Shooting Percentage"),
+         showlegend = TRUE,
+         legend = list(title = "Conference"))
+
+
+```
+
+
+
+
+
+
+
+
+
+
+

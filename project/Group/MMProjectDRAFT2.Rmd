@@ -1,0 +1,77 @@
+---
+title: "MarchMadnessProject"
+output: html_document
+date: "2024-04-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE, error = TRUE, fig.height = 3)
+library(tidyverse)
+library(kableExtra)
+source("../../scripts/viridis.R")
+source("../../scripts/ggprob.R")
+```
+
+## R Markdown
+
+dded to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r dataload, echo=FALSE}
+shoot = read_csv("../../data/Shooting Splits.csv")
+seed = read_csv("../../data/538 Ratings.csv")
+
+
+mmdata = shoot %>%
+        #filter(YEAR %in% (2016:2023)) %>%
+        filter(YEAR != 2020) %>%
+        rename(THREES_SPLIT = "THREES SHARE", MADE_THREES = "THREES FG%")
+               
+              # , CLOSE_TWOS_SPLIT = "CLOSE TWOS SHARE", FAR_TWOS_SPLIT = "FARTHER TWOS SHARE")
+
+#shoot
+
+#mmdata = full_join(shootno2020, seed, join_by("TEAM NO", "YEAR", "TEAM"))
+
+mmdata
+```
+
+```{r dataload, echo=FALSE}
+mmdata = mmdata %>%
+       group_by(YEAR) %>%
+       mutate(YEARLY_THREES_SHARE = sum(THREES_SPLIT)/n(), YEARLY_THREES_MADE = sum(MADE_THREES)/n())
+```
+
+
+
+```{r graphing, echo=FALSE}
+ggplot(mmdata, aes(x = YEAR, y = YEARLY_THREES_SHARE)) + 
+  geom_point() +
+  geom_smooth()
+  #geom_col()
+```
+
+```{r graphing, echo=FALSE}
+ggplot(mmdata, aes(x = YEAR, y = YEARLY_THREES_MADE)) + 
+  geom_point() +
+  geom_smooth()
+  #geom_col()
+```
+
+
+```{r dataload, echo=FALSE}
+ThreesShare2010To2015 = mmdata %>%
+                   filter(YEAR %in% (2010:2015)) %>%
+                   pull(YEARLY_THREES_SHARE)
+ThreesShare2016ToNow = mmdata %>%
+                   filter(YEAR %in% (2016:2024)) %>%
+                   pull(YEARLY_THREES_SHARE)
+
+t.test(ThreesShare2010To2015, ThreesShare2016ToNow, alternative = "two.sided")
+
+
+```
+
+
+
+
