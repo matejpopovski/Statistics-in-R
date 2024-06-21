@@ -1,0 +1,34 @@
+---
+title: "Review"
+author: "Youngjoo Yun"
+date: "2024-03-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+```{r}
+d1 = tibble(date = c("16.10.2023", "24.10.2023", "06.11.2023", "06.11.2023"), 
+              month = c(10, 10, 11, 11), 
+              wday = c("Mon", "Tue", "Mon", "Mon"),
+              numFlights = c(5, 10, 7, 9), 
+            numPass = c(6, 9, 7, 8))
+d2 = tibble(date = c("16.10.2023", "25.10.2023"), 
+            month = c(10, 10), 
+            wday = c("Mon", "Wed"), 
+            prcp = c(33, 50))
+d1
+d2
+```
+
+```{r}
+d = tibble(word = c("apple", "dread", "forum", "plain", "video"))
+d
+```
